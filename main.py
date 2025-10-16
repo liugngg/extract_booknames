@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import scrolledtext
 from pathlib import Path
+import os
 import re
 import threading
 import openpyxl
@@ -19,15 +20,15 @@ class TextExtractor:
         
     def setup_gui(self):
         # 创建主框架
-        main_frame = tb.Frame(self.root, bootstyle="light")
+        main_frame = tb.Frame(self.root, bootstyle="flatly")
         main_frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
         
         # 标题标签
         title_label = tb.Label(
             main_frame, 
             text="书名提取工具", 
-            font=("微软雅黑", 23, "bold"),
-            bootstyle=SUCCESS
+            font=("Mircosoft Yahei UI", 23, "bold"),
+            bootstyle=PRIMARY
         )
         title_label.pack(pady=(0,15))
         
@@ -35,10 +36,10 @@ class TextExtractor:
         dir_frame = tb.Frame(main_frame)
         dir_frame.pack(fill=X, pady=(0,10))
         
-        tb.Label(dir_frame, text="请选择目录:", bootstyle=INFO).pack(anchor=W, pady=(0,5))
+        tb.Label(dir_frame, text="请选择目录:", bootstyle=SUCCESS).pack(anchor=W, pady=(0,5))
         
         # 使用ttkbootstrap的Entry支持拖放
-        self.dir_entry = tb.Entry(dir_frame)
+        self.dir_entry = tb.Entry(dir_frame, bootstyle=SUCCESS)
         self.dir_entry.pack(side=LEFT, fill=X, expand=True)
         self.dir_entry.bind("<Button-1>", self.browse_directory)  # 点击打开目录选择
         self.dir_entry.bind("<B1-Motion>", self.on_drag)  # 模拟拖放效果
@@ -52,16 +53,29 @@ class TextExtractor:
             command=self.browse_directory
         )
         browse_btn.pack(side=RIGHT, padx=(5,0))
-        
+
+
+        frame_button = tb.Frame(main_frame)
+        frame_button.pack(anchor='n', pady=(0,10))        
         # 处理按钮
         self.process_btn = tb.Button(
-            main_frame, 
+            frame_button, 
             width=16,
             text="开始提取内容", 
             bootstyle=PRIMARY,
             command=self.process_directory
         )
-        self.process_btn.pack(pady=10)
+        self.process_btn.pack(side=LEFT, pady=(10,0))
+
+        # 打开目录按钮
+        self.open_dir_btn = tb.Button(
+            frame_button, 
+            width=16,
+            text="查看结果", 
+            bootstyle=(OUTLINE,INFO),
+            command=self.open_directory
+        )
+        self.open_dir_btn.pack(side=LEFT, padx=10,pady=(10,0))
         
         
         # 日志区域
@@ -115,6 +129,19 @@ class TextExtractor:
             self.dir_entry.insert(0, path)
             self.dir_entry.config(bootstyle="success")
     
+    def open_directory(self):
+        """打开结果目录"""
+        input_path = Path(self.dir_entry.get().strip())
+        print(input_path)
+        try:
+            if input_path.exists() and input_path.is_dir():
+                self.log_message(f"📂 打开目录: {input_path}")
+                os.startfile(Path(input_path))
+        except Exception as e:
+            self.log_message(f"❌ 错误: 无法打开目录 {input_path},报错: {e}")
+
+        
+
     def process_directory(self):
         """处理目录提取任务"""
         input_path = Path(self.dir_entry.get().strip())
